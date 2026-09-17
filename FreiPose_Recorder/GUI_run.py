@@ -262,7 +262,11 @@ class BASLER_GUI(QMainWindow):
 
         self.multi_view_timer = QTimer()
         self.multi_view_timer.timeout.connect(self.update_multi_view)
-        self.multi_view_timer.start(5)  # dependign on frame rate ..
+        self.multi_view_timer.start(int(1000 // self.basler_recorder.fps))  # match camera frame rate
+
+        self.status_bar_timer = QTimer()
+        self.status_bar_timer.timeout.connect(self._update_rec_status_bar)
+        self.status_bar_timer.start(1000)  # 1 Hz — queue sizes are readable, not flickering
 
         self.STOPButton.setEnabled(True)
         self.RUNButton.setEnabled(False)
@@ -336,6 +340,10 @@ class BASLER_GUI(QMainWindow):
             self.single_view_timer.stop()
             self.single_view_timer = None
             self.basler_recorder.stop_single_cam_show()
+
+        if hasattr(self, 'status_bar_timer') and self.status_bar_timer:
+            self.status_bar_timer.stop()
+            self.status_bar_timer = None
 
         if self.multi_view_timer:
             self.multi_view_timer.stop()
@@ -464,25 +472,16 @@ class BASLER_GUI(QMainWindow):
         if self.timer_update_counter >= 20:
             self.update_rec_timer()  # dont call this too often ?
             self.timer_update_counter = 0
-        try:
-            for c_id in range(self.number_cams):
-                curr_image = self.basler_recorder.multi_view_queue[c_id].get_nowait()
-                if self.DisableViz_checkBox.isChecked():
-                    continue  # return fast
-                else:
-                    self.MultiViewWidget.cam_viewers[c_id].updateView(curr_image)
-        except Empty:
-            return
-
-        writerstatus = f"\tVideoWriter {self.basler_recorder.video_writer_list[0].get_state()}" if len(
-            self.basler_recorder.video_writer_list) >= 1 else "not recording"
-
-        display_string = ""
-        for i in range(len(self.basler_recorder.multi_view_queue)):
-            display_string += f"Q{i}: {self.basler_recorder.multi_view_queue[i].qsize()}"
-        display_string += f"{writerstatus}"
-
-        self.statusbar.showMessage(display_string)
+        show = not self.DisableViz_checkBox.isChecked()
+        for c_id in range(self.number_cams):
+            latest = None
+            while True:
+                try:
+                    latest = self.basler_recorder.multi_view_queue[c_id].get_nowait()
+                except Empty:
+                    break
+            if show and latest is not None:
+                self.MultiViewWidget.cam_viewers[c_id].updateView(latest)
         # self.ViewWidget.updateView(currentImg)
         # self.ViewWidget.updateView(stitched_image)
 
@@ -496,6 +495,13 @@ class BASLER_GUI(QMainWindow):
             self.recording_duration_label.setText(f"{(current_run_time // 60):.0f}m:{(current_run_time % 60):2.0f}s")
         else:
             self.recording_duration_label.setText(f"{current_run_time:.0f}s")
+
+    def _update_rec_status_bar(self):
+        qs = "  ".join(f"Q{i}: {q.qsize()}"
+                       for i, q in enumerate(self.basler_recorder.multi_view_queue))
+        writer_state = (self.basler_recorder.video_writer_list[0].get_state()
+                        if self.basler_recorder.video_writer_list else "not recording")
+        self.statusbar.showMessage(f"{qs}  |  {writer_state}")
 
     #### SETTINGS ###
     def save_settings(self):
