@@ -1,6 +1,6 @@
 {
     "sideview": {
-        "gain": 47.20999996919846,
+        "gain": 45,
         "exp_time": 5000.0,
         "flipX": false,
         "flipY": false,
@@ -8,7 +8,7 @@
         "crf": 20
     },
     "top": {
-        "gain": 37.69999955666792,
+        "gain": 45,
         "exp_time": 4987.0,
         "flipX": true,
         "flipY": true,
@@ -16,12 +16,20 @@
         "crf": 20
     },
     "facecam": {
-        "gain": 38.34999928947086,
+        "gain": 40,
         "exp_time": 5000.0,
         "flipX": false,
         "flipY": false,
         "color_mode": "Mono8",
         "crf": 20
+    },
+    "pupil": {
+        "gain": 45,
+        "exp_time": 5000.0,
+        "flipX": false,
+        "flipY": false,
+        "color_mode": "Mono8",
+        "crf": 10
     },
     "save_path": "C:/LocalBaslerCopiesDONOTDELETE",
     "HW_trigg": true,
