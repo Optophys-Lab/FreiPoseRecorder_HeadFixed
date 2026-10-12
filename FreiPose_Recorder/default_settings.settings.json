@@ -9,7 +9,7 @@
     },
     "top": {
         "gain": 45,
-        "exp_time": 4987.0,
+        "exp_time": 5000.0,
         "flipX": true,
         "flipY": true,
         "color_mode": "Mono8",
@@ -29,7 +29,7 @@
         "flipX": false,
         "flipY": false,
         "color_mode": "Mono8",
-        "crf": 10
+        "crf": 15
     },
     "save_path": "C:/LocalBaslerCopiesDONOTDELETE",
     "HW_trigg": true,
