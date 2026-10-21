@@ -16,6 +16,6 @@ VIDEO_FOLDER = "behav_vid"  # folder for the videos
 TRIGGER_LINE_IN = "Line1"   # Input-line on the GPIO cable for the camera for the trigger signal
 TRIGGER_LINE_OUT = "Line3"  # Outputline for the camera, what should this be...
 MAX_FPS = 150    # maximum fps for the camera
-codec_to_try = ["h264_nvenc", "libx264", "mpeg4", "mpeg2video", "libxvid", "libx264rgb"]
+codec_to_try = ["h264_nvenc", "hevc_nvenc", "libx264", "mpeg4", "mpeg2video", "libxvid", "libx264rgb"]
 LOG2FILE = True  # Boolean to log to a file
 CONVERT2 = 'Mono8' # Mono8 or RGB8 Colorformat for conversion
