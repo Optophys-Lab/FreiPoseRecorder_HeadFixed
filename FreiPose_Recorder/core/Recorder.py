@@ -873,10 +873,6 @@ class Recorder(object):
         self.cams_context = None
 
     def multi_cam_record(self):
-        converter = pylon.ImageFormatConverter()
-        converter.OutputPixelFormat = pylon.PixelType_RGB8packed
-        converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned  # most significant bit first #
-
         self.cam_array.StartGrabbing(pylon.GrabStrategy_LatestImages)
         # cam.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)  # here you dont have any buffer
         # cam.StartGrabbing(pylon.GrabStrategy_OneByOne)  # here you dont get warnings if something gets skipped
@@ -890,18 +886,10 @@ class Recorder(object):
                 if grabResult.GetNumberOfSkippedImages() > 0:
                     self.log.warning(f'Cam{context_id}: Missed {grabResult.GetNumberOfSkippedImages()} frames')
                 if grabResult.GrabSucceeded():
-                    if converter.ImageHasDestinationFormat(grabResult):
-                        # no conversion required
-                        img = grabResult.GetArray()
-                    else:
-                        # convert to RGB
-                        targetImage = converter.Convert(grabResult)
-                        img = targetImage.GetArray()
+                    img = grabResult.GetArray()
                     img_nr_camera = grabResult.ID
                     img_nr = grabResult.ImageNumber
                     img_ts = grabResult.TimeStamp
-                    #if len(img.shape) == 2:
-                    #    img = np.stack([img] * 3, -1)
 
                     # context_id = self.cams_context[grabResult.GetCameraContext()]
                     if self.write_timestamps:
