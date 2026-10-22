@@ -5,7 +5,7 @@
         "flipX": false,
         "flipY": false,
         "color_mode": "Mono8",
-        "crf": 20
+        "crf": 30
     },
     "top": {
         "gain": 45,
@@ -13,7 +13,7 @@
         "flipX": true,
         "flipY": true,
         "color_mode": "Mono8",
-        "crf": 20
+        "crf": 30
     },
     "facecam": {
         "gain": 40,
@@ -21,7 +21,7 @@
         "flipX": false,
         "flipY": false,
         "color_mode": "Mono8",
-        "crf": 20
+        "crf": 30
     },
     "pupil": {
         "gain": 45,
@@ -29,10 +29,10 @@
         "flipX": false,
         "flipY": false,
         "color_mode": "Mono8",
-        "crf": 15
+        "crf": 20
     },
     "save_path": "C:/LocalBaslerCopiesDONOTDELETE",
     "HW_trigg": true,
-    "codec": "h264_nvenc",
+    "codec": "hevc_nvenc",
     "crf": 20
 }
