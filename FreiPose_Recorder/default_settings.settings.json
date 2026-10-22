@@ -33,6 +33,6 @@
     },
     "save_path": "C:/LocalBaslerCopiesDONOTDELETE",
     "HW_trigg": true,
-    "codec": "hevc_nvenc",
+    "codec": "h264_nvenc",
     "crf": 20
 }
