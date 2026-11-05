@@ -289,13 +289,19 @@ class BASLER_GUI(QMainWindow):
 
         self.recording_duration_label.setText("0s")
         self.rec_start_time = time.monotonic()
-        # create a time that executes the trigger after 500 ms delay to make sure cameras are ready
+        # Start trigger only after all cameras finish StartGrabbing (pylon buffer allocation).
+        # Fixed 500ms delay was not enough: late-initialized cameras missed first N triggers.
         if self.trigger and use_hw_trigger:
             self.trigger.fps = self.FrameRateSpin.value()
             self.trigger_timer = QTimer()
-            self.trigger_timer.setSingleShot(True)
-            self.trigger_timer.timeout.connect(self.trigger.start_trigger)
-            self.trigger_timer.start(500)
+            self.trigger_timer.timeout.connect(self._start_trigger_when_ready)
+            self.trigger_timer.start(50)  # poll every 50ms until grab_ready_event is set
+
+    def _start_trigger_when_ready(self):
+        """Poll until Recorder signals all cameras are in grab loop, then fire the trigger."""
+        if self.basler_recorder.grab_ready_event.is_set():
+            self.trigger_timer.stop()
+            self.trigger.start_trigger()
 
     def start_recording_calib(self):
         self.HWTrig_checkBox.setChecked(True)  # making sure calib mode is on
