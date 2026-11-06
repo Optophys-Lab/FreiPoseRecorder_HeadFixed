@@ -50,7 +50,6 @@ class Recorder(object):
         self.multi_view_queue = None
         self.stop_event = None
         self.error_event = Event()  # event we set if an error occurs to signal the main thread
-        self.grab_ready_event = Event()  # set after StartGrabbing() completes; GUI waits before firing trigger
         self.current_cam = None
         self.current_cam_name = ''
         self.single_view_thread = None
@@ -855,7 +854,6 @@ class Recorder(object):
         # self.log.debug(print(self.cams_context))
         self.stop_event = stop_event
         self.error_event.clear()
-        self.grab_ready_event.clear()
         self.multi_record_thread = Thread(target=self.multi_cam_record)
         self.multi_record_thread.start()
         self.is_recording = True
@@ -876,7 +874,6 @@ class Recorder(object):
 
     def multi_cam_record(self):
         self.cam_array.StartGrabbing(pylon.GrabStrategy_LatestImages)
-        self.grab_ready_event.set()  # all cameras are trigger-ready; GUI can now fire the trigger
         # cam.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)  # here you dont have any buffer
         # cam.StartGrabbing(pylon.GrabStrategy_OneByOne)  # here you dont get warnings if something gets skipped
 
