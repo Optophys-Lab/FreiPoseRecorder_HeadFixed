@@ -7,7 +7,7 @@
         "color_mode": "Mono8",
         "crf": 30
     },
-    "top": {
+    "topview": {
         "gain": 45,
         "exp_time": 5000.0,
         "flipX": true,
@@ -15,7 +15,7 @@
         "color_mode": "Mono8",
         "crf": 30
     },
-    "facecam": {
+    "bottomview": {
         "gain": 40,
         "exp_time": 5000.0,
         "flipX": false,
@@ -23,7 +23,7 @@
         "color_mode": "Mono8",
         "crf": 30
     },
-    "pupil": {
+    "facecam": {
         "gain": 45,
         "exp_time": 5000.0,
         "flipX": false,
