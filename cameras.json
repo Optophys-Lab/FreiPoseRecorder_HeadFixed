@@ -4,15 +4,15 @@
         "context": 16582928
     },
     "40627033": {
-        "name": "top",
+        "name": "topview",
         "context": 1518024
     },
     "40627034": {
-        "name": "facecam",
+        "name": "bottomview",
         "context": 11777639
     },
     "40662593": {
-        "name": "pupil",
+        "name": "facecam",
         "context": 3831811
     }
 }
