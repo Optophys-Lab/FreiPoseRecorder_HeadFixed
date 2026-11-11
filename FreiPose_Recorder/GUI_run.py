@@ -14,7 +14,7 @@ import shutil
 from queue import Empty
 from threading import Event, Thread
 
-from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QScrollArea, QFrame
 from PyQt6.QtCore import QTimer
 from PyQt6 import uic, QtGui, QtSerialPort
 
@@ -63,7 +63,8 @@ class BASLER_GUI(QMainWindow):
         self.path2file = Path(__file__)
         uic.loadUi(self.path2file.parent / 'GUI' / 'GUI_design.ui', self)
         self.setWindowTitle(f'FreiPose Recorder v.{VERSION}')
-        self.log = logging.getLogger('GUI')
+        self._wrap_central_in_scroll_area()
+        self.log =logging.getLogger('GUI')
         self.log.setLevel(logging.DEBUG)
 
         self.Codec_comboBox.addItems(codec_to_try)
@@ -205,6 +206,18 @@ class BASLER_GUI(QMainWindow):
 
         self.MultiViewWidget.num_cameras = nr_cams
         self.CameraSettings.num_cameras = nr_cams
+
+    def _wrap_central_in_scroll_area(self):
+        """The .ui uses absolute positions, so content is cut off in small windows.
+        Wrap it in a scroll area that shows scroll bars when the window is smaller than the content."""
+        central = self.takeCentralWidget()
+        rect = central.childrenRect()
+        central.setMinimumSize(rect.right() + 10, rect.bottom() + 10)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setWidget(central)
+        self.setCentralWidget(scroll)
 
     def connect_to_cams(self):
         self.basler_recorder.connect_cams()

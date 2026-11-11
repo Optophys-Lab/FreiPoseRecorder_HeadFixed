@@ -54,6 +54,7 @@ class MultiCameraViewer(QWidget):
             widget = ImageView_camera(self.parent)
             self.cam_viewers.append(widget)
             self.grid.addWidget(widget, i // step, i % step)
+        self._equalize_cells(step)
 
         self.show()
         self.grid.setSpacing(0)
@@ -70,6 +71,15 @@ class MultiCameraViewer(QWidget):
             widget = ImageView_camera(self.parent)
             self.cam_viewers.append(widget)
             self.grid.addWidget(widget, i // step, i % step)
+        self._equalize_cells(step)
+
+    def _equalize_cells(self, step):
+        """Give every grid row/column the same share of space, regardless of image size."""
+        rows = (self.num_cameras + step - 1) // step
+        for r in range(3):
+            self.grid.setRowStretch(r, 1 if r < rows else 0)
+        for c in range(3):
+            self.grid.setColumnStretch(c, 1 if c < step else 0)
 
 
 class ImageView_camera(QWidget):
@@ -82,7 +92,10 @@ class ImageView_camera(QWidget):
         #layout.setSpacing(0)
         # Create a RawImageWidget
         self.image_view = pg.RawImageWidget(scaled=True)
-        self.image_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        # Ignored: the image's own size must not influence how much grid space this view gets
+        self.image_view.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
+        self.image_view.setMinimumSize(1, 1)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
 
         # Add the RawImageWidget to the layout
         layout.addWidget(self.image_view)
