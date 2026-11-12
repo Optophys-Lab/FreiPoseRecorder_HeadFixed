@@ -919,7 +919,7 @@ class Recorder(object):
                         f"cam{i}({w._cam_name}): {w.get_state()}" for i, w in enumerate(self.video_writer_list)
                     )
                     any_degraded = any(
-                        w.Q.qsize() / w.queue_size > 0.8 for w in self.video_writer_list
+                        w._queue_depth_val.value / w.queue_size > 0.8 for w in self.video_writer_list
                     )
                     msg = f"Grab loop @ {elapsed:.0f}s — {states}"
                     if any_degraded:
