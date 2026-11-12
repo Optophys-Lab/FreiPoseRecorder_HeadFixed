@@ -877,6 +877,10 @@ class Recorder(object):
         # cam.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)  # here you dont have any buffer
         # cam.StartGrabbing(pylon.GrabStrategy_OneByOne)  # here you dont get warnings if something gets skipped
 
+        _grab_start = time.time()
+        _last_writer_stat = time.time()
+        _writer_stat_interval = 30.0  # seconds between grab-loop writer summaries
+
         while not self.stop_event.is_set():
             try:
                 grabResult = self.cam_array.RetrieveResult(self.grab_timeout, pylon.TimeoutHandling_ThrowException)
@@ -892,10 +896,13 @@ class Recorder(object):
                     img_ts = grabResult.TimeStamp
 
                     # context_id = self.cams_context[grabResult.GetCameraContext()]
-                    if self.write_timestamps:
-                        self.video_writer_list[context_id].feed((img, img_nr_camera, img_nr, img_ts))
-                    else:
-                        self.video_writer_list[context_id].feed(img)
+                    try:
+                        if self.write_timestamps:
+                            self.video_writer_list[context_id].feed((img, img_nr_camera, img_nr, img_ts))
+                        else:
+                            self.video_writer_list[context_id].feed(img)
+                    except QueueOverflow:
+                        self.log.warning(f'Cam{context_id}: write queue overflow — frame dropped')
                     try:
                         self.multi_view_queue[context_id].put_nowait(img[::2, ::2])
                     except (Full, QueueOverflow):
@@ -903,6 +910,23 @@ class Recorder(object):
                     grabResult.Release()
                 else:
                     self.log.error(grabResult.ErrorCode, grabResult.ErrorDescription)
+
+                # periodic grab-loop writer summary
+                _now = time.time()
+                if _now - _last_writer_stat >= _writer_stat_interval:
+                    elapsed = _now - _grab_start
+                    states = '  |  '.join(
+                        f"cam{i}({w._cam_name}): {w.get_state()}" for i, w in enumerate(self.video_writer_list)
+                    )
+                    any_degraded = any(
+                        w.Q.qsize() / w.queue_size > 0.8 for w in self.video_writer_list
+                    )
+                    msg = f"Grab loop @ {elapsed:.0f}s — {states}"
+                    if any_degraded:
+                        self.log.warning(f"WRITER DEGRADED — {msg}")
+                    else:
+                        self.log.info(msg)
+                    _last_writer_stat = _now
 
             except genicam.TimeoutException as e:
                 if self.stop_event.is_set():
