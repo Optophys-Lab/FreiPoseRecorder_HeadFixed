@@ -173,6 +173,10 @@ class VideoWriterFast:
     def start(self):
         """starts the child process to write frames to the video file"""
         self.started = True
+        # Create output dir in the parent process (which has write access to
+        # C:\LocalBaslerCopiesDONOTDELETE\) before spawning the child.
+        # Spawned processes on Windows can't create subdirectories there.
+        Path(self.video_path).parent.mkdir(parents=True, exist_ok=True)
         self._process = self._ctx.Process(
             target=_writer_process,
             args=(self.video_path, self.fps, self.codec, self.crf,
@@ -188,6 +192,15 @@ class VideoWriterFast:
     def feed(self, frame):
         if not self.started:
             self.start()
+
+        # Detect child process crash early — log once then keep dropping frames.
+        if self._process is not None and not self._process.is_alive() and not self.stopped:
+            self.log.error(
+                f"[{self._cam_name}] writer process has died (exit code "
+                f"{self._process.exitcode}) — frames will be dropped"
+            )
+            self.stopped = True
+            raise QueueOverflow
 
         # Use put_nowait + Full to avoid relying on qsize() on Windows.
         try:
