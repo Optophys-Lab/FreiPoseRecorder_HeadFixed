@@ -854,6 +854,7 @@ class Recorder(object):
         # self.log.debug(print(self.cams_context))
         self.stop_event = stop_event
         self.error_event.clear()
+        self._grab_started_event = Event()
         self.multi_record_thread = Thread(target=self.multi_cam_record)
         self.multi_record_thread.start()
         self.is_recording = True
@@ -874,6 +875,7 @@ class Recorder(object):
 
     def multi_cam_record(self):
         self.cam_array.StartGrabbing(pylon.GrabStrategy_LatestImages)
+        self._grab_started_event.set()  # unblock run_multi_cam_record → recording_ok sent only now
         # cam.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)  # here you dont have any buffer
         # cam.StartGrabbing(pylon.GrabStrategy_OneByOne)  # here you dont get warnings if something gets skipped
 

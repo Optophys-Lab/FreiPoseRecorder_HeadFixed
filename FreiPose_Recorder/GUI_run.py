@@ -257,6 +257,11 @@ class BASLER_GUI(QMainWindow):
         self.number_cams = self.basler_recorder.cam_array.GetSize()
         use_hw_trigger = self.HWTrig_checkBox.isChecked()
 
+        # Stop the Pico trigger before cameras re-initialize (handles view→record transition).
+        # It will be restarted 500ms after StartGrabbing() completes (see trigger_timer below).
+        if self.trigger and self.trigger.is_pulsing:
+            self.trigger.stop_trigger()
+
         self.basler_recorder.run_multi_cam_record(self.stop_event, filename=self.session_id,
                                                   use_hw_trigger=use_hw_trigger)
 
@@ -289,13 +294,27 @@ class BASLER_GUI(QMainWindow):
 
         self.recording_duration_label.setText("0s")
         self.rec_start_time = time.monotonic()
-        # create a time that executes the trigger after 500 ms delay to make sure cameras are ready
+        # Poll every 100ms until StartGrabbing() has completed, then start the Pico trigger.
+        # Fixed 500ms was not enough — cameras in HW-trigger mode can take longer to initialize.
         if self.trigger and use_hw_trigger:
             self.trigger.fps = self.FrameRateSpin.value()
+            self._trigger_wait_start = time.monotonic()
             self.trigger_timer = QTimer()
-            self.trigger_timer.setSingleShot(True)
-            self.trigger_timer.timeout.connect(self.trigger.start_trigger)
-            self.trigger_timer.start(500)
+            self.trigger_timer.timeout.connect(self._start_trigger_when_ready)
+            self.trigger_timer.start(100)
+
+    _TRIGGER_WAIT_TIMEOUT_S = 10.0  # if cameras aren't ready in 10s, start trigger anyway
+
+    def _start_trigger_when_ready(self):
+        elapsed = time.monotonic() - self._trigger_wait_start
+        if self.basler_recorder._grab_started_event.is_set():
+            self.trigger_timer.stop()
+            self.trigger.start_trigger()
+            self.log.info(f"Cameras ready after {elapsed:.2f}s — Pico trigger started")
+        elif elapsed > self._TRIGGER_WAIT_TIMEOUT_S:
+            self.trigger_timer.stop()
+            self.trigger.start_trigger()
+            self.log.warning(f"Camera grab event not set after {elapsed:.1f}s — starting trigger anyway")
 
     def start_recording_calib(self):
         self.HWTrig_checkBox.setChecked(True)  # making sure calib mode is on
