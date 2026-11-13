@@ -262,7 +262,7 @@ class BASLER_GUI(QMainWindow):
 
         self.multi_view_timer = QTimer()
         self.multi_view_timer.timeout.connect(self.update_multi_view)
-        self.multi_view_timer.start(int(1000 // self.basler_recorder.fps))  # match camera frame rate
+        self.multi_view_timer.start(100)  # 10 fps — pg.RawImageWidget.setImage is too slow for 30fps x 4 cams
 
         self.status_bar_timer = QTimer()
         self.status_bar_timer.timeout.connect(self._update_rec_status_bar)
